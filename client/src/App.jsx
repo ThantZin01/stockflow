@@ -1,71 +1,24 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link, Route, Routes } from 'react-router-dom';
-import { getHealthStatus } from './api/health.api.js';
+import { AppLayout } from './components/AppLayout.jsx';
+import { CategoriesPage } from './pages/CategoriesPage.jsx';
+import { DashboardPage } from './pages/DashboardPage.jsx';
+import { LoginPage } from './pages/LoginPage.jsx';
+import { ProductDetailPage } from './pages/ProductDetailPage.jsx';
+import { ProductsPage } from './pages/ProductsPage.jsx';
+import { RegisterPage } from './pages/RegisterPage.jsx';
+import { SuppliersPage } from './pages/SuppliersPage.jsx';
+import { UsersPage } from './pages/UsersPage.jsx';
+import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
+import { RoleRoute } from './routes/RoleRoute.jsx';
 
-const HomePage = () => {
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['health'],
-    queryFn: getHealthStatus,
-    retry: 1,
-  });
-
-  const health = data?.data;
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">StockFlow</h1>
-            <p className="text-sm text-slate-500">Inventory &amp; Order Management System</p>
-          </div>
-          <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-            Phase 1 — Setup
-          </span>
-        </div>
-
-        <div className="rounded-lg bg-slate-50 border border-slate-200 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-slate-700">API Health Check</span>
-            <button
-              type="button"
-              onClick={() => refetch()}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer"
-            >
-              Refresh
-            </button>
-          </div>
-
-          {isLoading && <p className="text-sm text-slate-500">Checking backend connection...</p>}
-
-          {isError && (
-            <div className="text-sm text-red-600">
-              <p className="font-medium">Unable to reach API</p>
-              <p className="text-xs mt-1">{error?.message}</p>
-            </div>
-          )}
-
-          {!isLoading && !isError && health && (
-            <dl className="grid grid-cols-2 gap-2 text-sm mt-2">
-              <div>
-                <dt className="text-xs text-slate-500">API Status</dt>
-                <dd className="font-medium text-emerald-600 uppercase">{health.status}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500">Database</dt>
-                <dd className="font-medium text-slate-800 capitalize">{health.database}</dd>
-              </div>
-              <div className="col-span-2">
-                <dt className="text-xs text-slate-500">Timestamp</dt>
-                <dd className="font-mono text-xs text-slate-600">{health.timestamp}</dd>
-              </div>
-            </dl>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+const ComingSoonPage = ({ title, phase }) => (
+  <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+    <h1 className="text-xl font-bold text-slate-900">{title}</h1>
+    <p className="mt-2 text-sm text-slate-600">
+      This module will be built in <span className="font-medium">{phase}</span>.
+    </p>
+  </div>
+);
 
 const NotFoundPage = () => (
   <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
@@ -75,14 +28,40 @@ const NotFoundPage = () => (
       to="/"
       className="mt-4 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
     >
-      Back to Home
+      Back to Dashboard
     </Link>
   </div>
 );
 
 export const App = () => (
   <Routes>
-    <Route path="/" element={<HomePage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/register" element={<RegisterPage />} />
+
+    <Route element={<ProtectedRoute />}>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/suppliers" element={<SuppliersPage />} />
+        <Route path="/stock" element={<ComingSoonPage title="Stock" phase="Phase 4" />} />
+        <Route
+          path="/purchase-orders"
+          element={<ComingSoonPage title="Purchase Orders" phase="Phase 5" />}
+        />
+        <Route
+          path="/sales-orders"
+          element={<ComingSoonPage title="Sales Orders" phase="Phase 6" />}
+        />
+        <Route path="/reports" element={<ComingSoonPage title="Reports" phase="Phase 7" />} />
+
+        <Route element={<RoleRoute allowedRoles={['admin']} />}>
+          <Route path="/users" element={<UsersPage />} />
+        </Route>
+      </Route>
+    </Route>
+
     <Route path="*" element={<NotFoundPage />} />
   </Routes>
 );
