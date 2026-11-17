@@ -119,10 +119,11 @@ export const adjustStock = async ({ productId, quantityChange, reason, userId })
     throw new ApiError(400, 'Quantity adjustment cannot be zero');
   }
 
+  // Archived products are frozen; filtering here keeps the check atomic with the update.
   const filter =
     quantityChange < 0
-      ? { _id: productId, quantity: { $gte: Math.abs(quantityChange) } }
-      : { _id: productId };
+      ? { _id: productId, isArchived: false, quantity: { $gte: Math.abs(quantityChange) } }
+      : { _id: productId, isArchived: false };
 
   const product = await Product.findOneAndUpdate(
     filter,
@@ -134,9 +135,12 @@ export const adjustStock = async ({ productId, quantityChange, reason, userId })
     .lean();
 
   if (!product) {
-    const exists = await Product.findById(productId).select('sku quantity').lean();
+    const exists = await Product.findById(productId).select('sku quantity isArchived').lean();
     if (!exists) {
       throw new ApiError(404, 'Product not found');
+    }
+    if (exists.isArchived) {
+      throw new ApiError(409, `Cannot adjust stock for archived product ${exists.sku}`);
     }
     throw new ApiError(
       409,
@@ -156,3 +160,67 @@ export const adjustStock = async ({ productId, quantityChange, reason, userId })
   return { product, movement };
 };
 
+const buildMeta = (page, limit, total) => ({
+  page,
+  limit,
+  total,
+  totalPages: Math.ceil(total / limit) || 1,
+});
+
+/**
+ * Lists active products at or below their reorder level, most urgent first.
+ */
+export const listLowStock = async ({ page = 1, limit = 10 }) => {
+  // `$expr` compares two fields of the same document (SQL: WHERE quantity <= reorder_level).
+  const filter = { isArchived: false, $expr: { $lte: ['$quantity', '$reorderLevel'] } };
+  const skip = (page - 1) * limit;
+
+  const [products, total] = await Promise.all([
+    Product.find(filter)
+      .select('sku name quantity reorderLevel category supplier')
+      .populate('category', 'name')
+      .populate('supplier', 'name')
+      .sort({ quantity: 1, name: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Product.countDocuments(filter),
+  ]);
+
+  return { products, meta: buildMeta(page, limit, total) };
+};
+
+/**
+ * Lists stock movements, newest first, filterable by product, type, and date range.
+ *
+ * Note: when filtering by product, the `{ product: 1, createdAt: -1 }` compound
+ * index serves both the filter and the sort.
+ */
+export const listMovements = async ({ product, type, from, to, page = 1, limit = 10 }) => {
+  const filter = {};
+
+  if (product) filter.product = product;
+  if (type) filter.type = type;
+
+  if (from || to) {
+    filter.createdAt = {};
+    // Date-only strings are expanded to full days in the server's local time.
+    if (from) filter.createdAt.$gte = new Date(`${from}T00:00:00.000`);
+    if (to) filter.createdAt.$lte = new Date(`${to}T23:59:59.999`);
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [movements, total] = await Promise.all([
+    StockMovement.find(filter)
+      .populate('product', 'sku name')
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    StockMovement.countDocuments(filter),
+  ]);
+
+  return { movements, meta: buildMeta(page, limit, total) };
+};

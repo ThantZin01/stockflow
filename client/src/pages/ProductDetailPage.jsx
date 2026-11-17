@@ -1,14 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { fetchProductById } from '../api/products.api.js';
+import { fetchStockMovements } from '../api/stock.api.js';
+import { MovementsTable } from '../components/MovementsTable.jsx';
+import { Pagination } from '../components/Pagination.jsx';
+import { StockAdjustForm } from '../components/StockAdjustForm.jsx';
 
 export const ProductDetailPage = () => {
   const { id } = useParams();
+  const [movementPage, setMovementPage] = useState(1);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['product', id],
     queryFn: () => fetchProductById(id),
   });
+
+  const movementsQuery = useQuery({
+    queryKey: ['stock', 'movements', { product: id, page: movementPage }],
+    queryFn: () => fetchStockMovements({ product: id, page: movementPage, limit: 10 }),
+  });
+
+  const movementMeta = movementsQuery.data?.meta;
 
   if (isLoading) {
     return (
@@ -27,7 +40,6 @@ export const ProductDetailPage = () => {
   }
 
   const product = data?.data?.product;
-  const movements = data?.data?.movements || [];
 
   if (!product) {
     return null;
@@ -98,55 +110,34 @@ export const ProductDetailPage = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="text-sm font-semibold text-slate-900">Recent Stock Movements</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200">
+            <h2 className="text-sm font-semibold text-slate-900">Stock Movement History</h2>
+          </div>
+          <MovementsTable
+            movements={movementsQuery.data?.data}
+            isLoading={movementsQuery.isLoading}
+            isError={movementsQuery.isError}
+            error={movementsQuery.error}
+            showProduct={false}
+          />
+          <Pagination
+            page={movementMeta?.page || 1}
+            totalPages={movementMeta?.totalPages}
+            total={movementMeta?.total}
+            onPageChange={setMovementPage}
+          />
         </div>
 
-        {movements.length === 0 ? (
-          <div className="p-8 text-center text-sm text-slate-500">
-            No stock movements recorded for this product yet.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th className="px-6 py-3">Date</th>
-                  <th className="px-6 py-3">Type</th>
-                  <th className="px-6 py-3">Change</th>
-                  <th className="px-6 py-3">Reason</th>
-                  <th className="px-6 py-3">By</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 bg-white">
-                {movements.map((mv) => (
-                  <tr key={mv._id} className="hover:bg-slate-50">
-                    <td className="px-6 py-3 text-xs text-slate-500">
-                      {new Date(mv.createdAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                        {mv.type}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-6 py-3 font-medium ${
-                        mv.quantity > 0 ? 'text-emerald-600' : 'text-red-600'
-                      }`}
-                    >
-                      {mv.quantity > 0 ? `+${mv.quantity}` : mv.quantity}
-                    </td>
-                    <td className="px-6 py-3 text-slate-700">{mv.reason}</td>
-                    <td className="px-6 py-3 text-xs text-slate-500">
-                      {mv.createdBy?.name || 'System'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 h-fit">
+          <h2 className="text-sm font-semibold text-slate-900 mb-4">Adjust Stock</h2>
+          {product.isArchived ? (
+            <p className="text-sm text-slate-500">Unarchive this product to adjust its stock.</p>
+          ) : (
+            <StockAdjustForm fixedProduct={product} onSuccess={() => setMovementPage(1)} />
+          )}
+        </div>
       </div>
     </div>
   );

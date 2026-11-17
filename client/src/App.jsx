@@ -6,6 +6,7 @@ import { LoginPage } from './pages/LoginPage.jsx';
 import { ProductDetailPage } from './pages/ProductDetailPage.jsx';
 import { ProductsPage } from './pages/ProductsPage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
+import { StockPage } from './pages/StockPage.jsx';
 import { SuppliersPage } from './pages/SuppliersPage.jsx';
 import { UsersPage } from './pages/UsersPage.jsx';
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
@@ -45,7 +46,7 @@ export const App = () => (
         <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/suppliers" element={<SuppliersPage />} />
-        <Route path="/stock" element={<ComingSoonPage title="Stock" phase="Phase 4" />} />
+        <Route path="/stock" element={<StockPage />} />
         <Route
           path="/purchase-orders"
           element={<ComingSoonPage title="Purchase Orders" phase="Phase 5" />}
