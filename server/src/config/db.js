@@ -1,11 +1,12 @@
 import dns from 'node:dns';
-
-// Some ISPs/routers block SRV lookups required by mongodb+srv URIs.
-// Use public DNS servers for this process only.
-dns.setServers(['8.8.8.8', '1.1.1.1']);
-
 import mongoose from 'mongoose';
 import { env } from './env.js';
+
+// Some local ISPs/routers block SRV lookups required by mongodb+srv URIs.
+// Only override DNS locally; cloud runtimes (Vercel/Render) use their own DNS.
+if (!process.env.VERCEL && env.NODE_ENV === 'development') {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+}
 
 /**
  * Connects to MongoDB via Mongoose.
@@ -30,6 +31,7 @@ export const connectDB = async () => {
     connectionPromise = mongoose
       .connect(env.MONGODB_URI, {
         dbName: 'stockflow',
+        serverSelectionTimeoutMS: 8000,
       })
       .then((conn) => {
         console.log(`MongoDB connected: ${conn.connection.host} (${conn.connection.name})`);
