@@ -7,6 +7,7 @@ import { ProductDetailPage } from './pages/ProductDetailPage.jsx';
 import { ProductsPage } from './pages/ProductsPage.jsx';
 import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
+import { SalesOrdersPage } from './pages/SalesOrdersPage.jsx';
 import { StockPage } from './pages/StockPage.jsx';
 import { SuppliersPage } from './pages/SuppliersPage.jsx';
 import { UsersPage } from './pages/UsersPage.jsx';
@@ -49,10 +50,7 @@ export const App = () => (
         <Route path="/suppliers" element={<SuppliersPage />} />
         <Route path="/stock" element={<StockPage />} />
         <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
-        <Route
-          path="/sales-orders"
-          element={<ComingSoonPage title="Sales Orders" phase="Phase 6" />}
-        />
+        <Route path="/sales-orders" element={<SalesOrdersPage />} />
         <Route path="/reports" element={<ComingSoonPage title="Reports" phase="Phase 7" />} />
 
         <Route element={<RoleRoute allowedRoles={['admin']} />}>
