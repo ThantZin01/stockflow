@@ -19,15 +19,31 @@ import { env } from './env.js';
  * the path segment after `.mongodb.net/`, Mongoose writes to `stockflow`
  * instead of MongoDB's default `test` database.
  */
+let connectionPromise = null;
+
 export const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(env.MONGODB_URI, {
-      dbName: 'stockflow',
-    });
-    console.log(`MongoDB connected: ${conn.connection.host} (${conn.connection.name})`);
-    return conn;
-  } catch (error) {
-    console.error(`MongoDB connection error: ${error.message}`);
-    process.exit(1);
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
+
+  if (!connectionPromise) {
+    connectionPromise = mongoose
+      .connect(env.MONGODB_URI, {
+        dbName: 'stockflow',
+      })
+      .then((conn) => {
+        console.log(`MongoDB connected: ${conn.connection.host} (${conn.connection.name})`);
+        return conn;
+      })
+      .catch((error) => {
+        connectionPromise = null;
+        console.error(`MongoDB connection error: ${error.message}`);
+        if (process.env.VERCEL) {
+          throw error;
+        }
+        process.exit(1);
+      });
+  }
+
+  return connectionPromise;
 };
