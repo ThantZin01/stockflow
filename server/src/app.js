@@ -10,6 +10,7 @@ import { categoryRouter } from './routes/category.routes.js';
 import { healthRouter } from './routes/health.routes.js';
 import { productRouter } from './routes/product.routes.js';
 import { purchaseOrderRouter } from './routes/purchaseOrder.routes.js';
+import { reportRouter } from './routes/report.routes.js';
 import { salesOrderRouter } from './routes/salesOrder.routes.js';
 import { stockRouter } from './routes/stock.routes.js';
 import { supplierRouter } from './routes/supplier.routes.js';
@@ -49,6 +50,7 @@ app.use('/api/v1/products', productRouter);
 app.use('/api/v1/stock', stockRouter);
 app.use('/api/v1/purchase-orders', purchaseOrderRouter);
 app.use('/api/v1/sales-orders', salesOrderRouter);
+app.use('/api/v1/reports', reportRouter);
 
 app.use(notFound);
 app.use(errorHandler);

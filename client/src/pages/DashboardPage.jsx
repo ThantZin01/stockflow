@@ -1,15 +1,31 @@
 import { useQuery } from '@tanstack/react-query';
-import { getHealthStatus } from '../api/health.api.js';
+import { Link } from 'react-router-dom';
+import { fetchReportSummary, fetchSalesReport } from '../api/reports.api.js';
+import { fetchLowStock } from '../api/stock.api.js';
+import { LowStockTable } from '../components/LowStockTable.jsx';
+import { SalesChart } from '../components/SalesChart.jsx';
+import { StatCard } from '../components/StatCard.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
 export const DashboardPage = () => {
   const { user } = useAuth();
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['health'],
-    queryFn: getHealthStatus,
+
+  const summaryQuery = useQuery({
+    queryKey: ['reports', 'summary'],
+    queryFn: fetchReportSummary,
   });
 
-  const health = data?.data;
+  const salesQuery = useQuery({
+    queryKey: ['reports', 'sales', 'dashboard'],
+    queryFn: () => fetchSalesReport(),
+  });
+
+  const lowStockQuery = useQuery({
+    queryKey: ['stock', 'low', { page: 1, limit: 5 }],
+    queryFn: () => fetchLowStock({ page: 1, limit: 5 }),
+  });
+
+  const summary = summaryQuery.data?.data;
 
   return (
     <div className="space-y-6">
@@ -20,39 +36,64 @@ export const DashboardPage = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-800 uppercase tracking-wide">
-          System Status
-        </h2>
+      {summaryQuery.isError && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          Failed to load dashboard metrics: {summaryQuery.error?.message}
+        </div>
+      )}
 
-        {isLoading && <p className="mt-3 text-sm text-slate-500">Checking backend status...</p>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Total Products"
+          value={summaryQuery.isLoading ? '...' : (summary?.totalProducts ?? 0)}
+          subtext="Active catalog items"
+        />
+        <StatCard
+          label="Low Stock"
+          value={summaryQuery.isLoading ? '...' : (summary?.lowStockCount ?? 0)}
+          subtext="At or below reorder level"
+          accent={summary?.lowStockCount > 0 ? 'text-amber-600' : 'text-slate-900'}
+        />
+        <StatCard
+          label="Orders Today"
+          value={summaryQuery.isLoading ? '...' : (summary?.ordersToday ?? 0)}
+          subtext="Non-cancelled sales orders"
+        />
+        <StatCard
+          label="Revenue This Month"
+          value={
+            summaryQuery.isLoading ? '...' : `$${Number(summary?.revenueThisMonth ?? 0).toFixed(2)}`
+          }
+          subtext="Confirmed & completed orders"
+          accent="text-emerald-600"
+        />
+      </div>
 
-        {isError && (
-          <p className="mt-3 text-sm text-red-600">Unable to reach API: {error?.message}</p>
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-slate-900">Sales (Last 30 Days)</h2>
+            <Link to="/reports" className="text-xs font-medium text-indigo-600 hover:underline">
+              Full reports &rarr;
+            </Link>
+          </div>
+          <SalesChart
+            data={salesQuery.data?.data}
+            isLoading={salesQuery.isLoading}
+            isError={salesQuery.isError}
+            error={salesQuery.error}
+          />
+        </div>
 
-        {!isLoading && !isError && health && (
-          <dl className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
-              <dt className="text-xs text-slate-500">API Status</dt>
-              <dd className="mt-1 text-lg font-semibold text-emerald-600 uppercase">
-                {health.status}
-              </dd>
-            </div>
-            <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
-              <dt className="text-xs text-slate-500">Database</dt>
-              <dd className="mt-1 text-lg font-semibold text-slate-900 capitalize">
-                {health.database}
-              </dd>
-            </div>
-            <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
-              <dt className="text-xs text-slate-500">Current Role</dt>
-              <dd className="mt-1 text-lg font-semibold text-indigo-600 capitalize">
-                {user?.role}
-              </dd>
-            </div>
-          </dl>
-        )}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-900">Low Stock Alerts</h2>
+            <Link to="/stock" className="text-xs font-medium text-indigo-600 hover:underline">
+              Manage stock &rarr;
+            </Link>
+          </div>
+          <LowStockTable query={lowStockQuery} />
+        </div>
       </div>
     </div>
   );
