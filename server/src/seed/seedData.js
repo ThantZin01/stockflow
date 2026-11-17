@@ -1,0 +1,65 @@
+export const CATEGORIES = [
+  { name: 'Electronics', description: 'Computers, peripherals, and accessories' },
+  { name: 'Office Supplies', description: 'Paper, stationery, and desk essentials' },
+  { name: 'Furniture', description: 'Desks, chairs, and storage units' },
+  { name: 'Networking', description: 'Routers, switches, and cables' },
+  { name: 'Packaging', description: 'Boxes, tape, and shipping materials' },
+];
+
+export const SUPPLIERS = [
+  {
+    name: 'Apex Tech Distribution',
+    contactName: 'Maya Lin',
+    email: 'orders@apextech.example.com',
+    phone: '+1-555-0142',
+    address: '410 Harbor Blvd, San Jose, CA',
+  },
+  {
+    name: 'Metro Office Co.',
+    contactName: 'Daniel Brooks',
+    email: 'sales@metrooffice.example.com',
+    phone: '+1-555-0188',
+    address: '88 Market St, Chicago, IL',
+  },
+  {
+    name: 'Global Pack & Supply',
+    contactName: 'Priya Nair',
+    email: 'supply@globalpack.example.com',
+    phone: '+1-555-0195',
+    address: '220 Industrial Pkwy, Austin, TX',
+  },
+];
+
+// [sku, name, catIdx, supIdx, costPrice, salePrice, reorderLevel, initialQuantity]
+export const PRODUCTS = [
+  ['ELC-1001', 'Wireless Ergonomic Mouse', 0, 0, 18.5, 34.99, 10, 42],
+  ['ELC-1002', 'Mechanical Keyboard TKL', 0, 0, 45.0, 89.99, 8, 25],
+  ['ELC-1003', 'USB-C 7-in-1 Hub', 0, 0, 22.0, 44.99, 10, 6],
+  ['ELC-1004', '27-inch 4K IPS Monitor', 0, 0, 210.0, 349.0, 5, 14],
+  ['ELC-1005', '1080p Autofocus Webcam', 0, 0, 28.0, 59.99, 8, 4],
+  ['ELC-1006', 'Noise-Canceling Headset', 0, 0, 52.0, 109.0, 6, 19],
+  ['OFC-2001', 'A4 Copy Paper (500 Sheets)', 1, 1, 4.2, 8.99, 25, 120],
+  ['OFC-2002', 'Gel Ink Pens (12-Pack)', 1, 1, 3.5, 7.99, 20, 75],
+  ['OFC-2003', 'Sticky Notes Cube (6-Pack)', 1, 1, 2.8, 6.49, 15, 11],
+  ['OFC-2004', 'Heavy-Duty Stapler', 1, 1, 7.5, 15.99, 10, 30],
+  ['OFC-2005', 'Spiral Notebook A5', 1, 1, 2.1, 5.49, 20, 64],
+  ['OFC-2006', 'Dry-Erase Markers (8-Pack)', 1, 1, 4.0, 9.49, 12, 9],
+  ['FRN-3001', 'Mesh Ergonomic Task Chair', 2, 1, 115.0, 229.0, 4, 12],
+  ['FRN-3002', 'Standing Desk Frame Dual-Motor', 2, 1, 180.0, 339.0, 3, 7],
+  ['FRN-3003', '3-Drawer Mobile Pedestal', 2, 1, 72.0, 139.0, 5, 3],
+  ['FRN-3004', 'Dual Monitor Arm Mount', 2, 0, 34.0, 69.99, 6, 18],
+  ['FRN-3005', 'Acoustic Desk Divider', 2, 1, 26.0, 54.0, 5, 15],
+  ['FRN-3006', 'LED Architect Desk Lamp', 2, 0, 19.0, 39.99, 8, 22],
+  ['NET-4001', 'Cat6 Patch Cable 2m (5-Pack)', 3, 0, 8.0, 17.99, 15, 50],
+  ['NET-4002', '8-Port Gigabit Switch', 3, 0, 24.0, 49.99, 8, 16],
+  ['NET-4003', 'Wi-Fi 6 Dual-Band Router', 3, 0, 68.0, 129.0, 5, 5],
+  ['NET-4004', '24-Port Managed Switch', 3, 0, 145.0, 269.0, 3, 8],
+  ['NET-4005', 'USB-C to Gigabit Ethernet', 3, 0, 9.5, 19.99, 12, 34],
+  ['NET-4006', 'Wall-Mount 6U Rack Cabinet', 3, 0, 88.0, 169.0, 3, 2],
+  ['PKG-5001', 'Corrugated Box 12x9x6 (25ct)', 4, 2, 14.0, 28.0, 12, 40],
+  ['PKG-5002', 'Clear Packing Tape (6-Roll)', 4, 2, 6.5, 13.99, 15, 55],
+  ['PKG-5003', 'Bubble Wrap Roll 12in x 50ft', 4, 2, 9.0, 18.99, 10, 8],
+  ['PKG-5004', 'Thermal Shipping Labels (500ct)', 4, 2, 7.5, 16.49, 15, 48],
+  ['PKG-5005', 'Kraft Void Fill Paper Roll', 4, 2, 16.0, 32.0, 6, 19],
+  ['PKG-5006', 'Padded Poly Mailers (100ct)', 4, 2, 11.0, 22.99, 10, 33],
+];

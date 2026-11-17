@@ -1,0 +1,208 @@
+{
+  "info": {
+    "name": "StockFlow API v1",
+    "_postman_id": "a7e4f8a2-6c1d-4d62-9b14-stockflow-v1",
+    "description": "Inventory & Order Management REST API collection for StockFlow.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo User\",\n  \"email\": \"demo@stockflow.dev\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@stockflow.dev\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/me" }
+        }
+      ]
+    },
+    {
+      "name": "Users (Admin)",
+      "item": [
+        { "name": "List Users", "request": { "method": "GET", "url": "{{baseUrl}}/users" } },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"role\": \"admin\"\n}" },
+            "url": "{{baseUrl}}/users/:id/role"
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"isActive\": true\n}" },
+            "url": "{{baseUrl}}/users/:id/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "List Categories", "request": { "method": "GET", "url": "{{baseUrl}}/categories" } },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Hardware\",\n  \"description\": \"Tools and hardware\"\n}" },
+            "url": "{{baseUrl}}/categories"
+          }
+        },
+        { "name": "Delete Category (Admin)", "request": { "method": "DELETE", "url": "{{baseUrl}}/categories/:id" } }
+      ]
+    },
+    {
+      "name": "Suppliers",
+      "item": [
+        { "name": "List Suppliers", "request": { "method": "GET", "url": "{{baseUrl}}/suppliers" } },
+        { "name": "Get Supplier", "request": { "method": "GET", "url": "{{baseUrl}}/suppliers/:id" } },
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Acme Supply\",\n  \"contactName\": \"Jane Doe\",\n  \"email\": \"jane@acme.test\",\n  \"phone\": \"+1-555-0100\",\n  \"address\": \"100 Main St\"\n}"
+            },
+            "url": "{{baseUrl}}/suppliers"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        { "name": "List Products", "request": { "method": "GET", "url": "{{baseUrl}}/products?page=1&limit=10" } },
+        { "name": "Get Product", "request": { "method": "GET", "url": "{{baseUrl}}/products/:id" } },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SKU-9001\",\n  \"name\": \"Sample Product\",\n  \"category\": \"<categoryId>\",\n  \"supplier\": \"<supplierId>\",\n  \"costPrice\": 10,\n  \"salePrice\": 25,\n  \"reorderLevel\": 5,\n  \"initialQuantity\": 20\n}"
+            },
+            "url": "{{baseUrl}}/products"
+          }
+        },
+        { "name": "Toggle Archive", "request": { "method": "PATCH", "url": "{{baseUrl}}/products/:id/archive" } }
+      ]
+    },
+    {
+      "name": "Stock",
+      "item": [
+        { "name": "Low Stock", "request": { "method": "GET", "url": "{{baseUrl}}/stock/low" } },
+        { "name": "Movements", "request": { "method": "GET", "url": "{{baseUrl}}/stock/movements?page=1&limit=10" } },
+        {
+          "name": "Adjust Stock",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"<productId>\",\n  \"quantityChange\": -2,\n  \"reason\": \"Damaged in warehouse\"\n}"
+            },
+            "url": "{{baseUrl}}/stock/adjust"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchase Orders",
+      "item": [
+        { "name": "List POs", "request": { "method": "GET", "url": "{{baseUrl}}/purchase-orders" } },
+        {
+          "name": "Create PO",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplier\": \"<supplierId>\",\n  \"items\": [{ \"product\": \"<productId>\", \"quantity\": 10, \"unitCost\": 10 }]\n}"
+            },
+            "url": "{{baseUrl}}/purchase-orders"
+          }
+        },
+        { "name": "Mark Ordered", "request": { "method": "PATCH", "url": "{{baseUrl}}/purchase-orders/:id/order" } },
+        { "name": "Receive PO", "request": { "method": "PATCH", "url": "{{baseUrl}}/purchase-orders/:id/receive" } }
+      ]
+    },
+    {
+      "name": "Sales Orders",
+      "item": [
+        { "name": "List Sales Orders", "request": { "method": "GET", "url": "{{baseUrl}}/sales-orders" } },
+        {
+          "name": "Create Sales Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Northwind Studio\",\n  \"customerPhone\": \"+1-555-0201\",\n  \"items\": [{ \"product\": \"<productId>\", \"quantity\": 2 }]\n}"
+            },
+            "url": "{{baseUrl}}/sales-orders"
+          }
+        },
+        { "name": "Confirm Sales Order", "request": { "method": "PATCH", "url": "{{baseUrl}}/sales-orders/:id/confirm" } },
+        { "name": "Complete Sales Order", "request": { "method": "PATCH", "url": "{{baseUrl}}/sales-orders/:id/complete" } },
+        { "name": "Cancel Sales Order", "request": { "method": "PATCH", "url": "{{baseUrl}}/sales-orders/:id/cancel" } }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "Summary", "request": { "method": "GET", "url": "{{baseUrl}}/reports/summary" } },
+        { "name": "Sales by Date", "request": { "method": "GET", "url": "{{baseUrl}}/reports/sales" } },
+        { "name": "Top Products", "request": { "method": "GET", "url": "{{baseUrl}}/reports/top-products?limit=10" } },
+        { "name": "Stock Value", "request": { "method": "GET", "url": "{{baseUrl}}/reports/stock-value" } }
+      ]
+    }
+  ]
+}
