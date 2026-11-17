@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { ProductDetailPage } from './pages/ProductDetailPage.jsx';
 import { ProductsPage } from './pages/ProductsPage.jsx';
+import { PurchaseOrdersPage } from './pages/PurchaseOrdersPage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
 import { StockPage } from './pages/StockPage.jsx';
 import { SuppliersPage } from './pages/SuppliersPage.jsx';
@@ -47,10 +48,7 @@ export const App = () => (
         <Route path="/categories" element={<CategoriesPage />} />
         <Route path="/suppliers" element={<SuppliersPage />} />
         <Route path="/stock" element={<StockPage />} />
-        <Route
-          path="/purchase-orders"
-          element={<ComingSoonPage title="Purchase Orders" phase="Phase 5" />}
-        />
+        <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
         <Route
           path="/sales-orders"
           element={<ComingSoonPage title="Sales Orders" phase="Phase 6" />}
