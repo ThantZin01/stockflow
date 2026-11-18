@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { formatMMK, formatMMKAxis } from '../utils/currency.js';
 
 export const SalesChart = ({ data = [], isLoading, isError, error }) => {
   if (isLoading) {
@@ -39,13 +40,16 @@ export const SalesChart = ({ data = [], isLoading, isError, error }) => {
         <AreaChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#64748b' }} />
-          <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(v) => `$${v}`} />
+          <YAxis
+            tick={{ fontSize: 11, fill: '#64748b' }}
+            tickFormatter={(v) => `${formatMMKAxis(v)} MMK`}
+          />
           <Tooltip
             formatter={(value, name) =>
-              name === 'revenue' ? [`$${Number(value).toFixed(2)}`, 'Revenue'] : [value, 'Orders']
+              name === 'revenue' ? [formatMMK(value), 'Revenue (MMK)'] : [value, 'Orders']
             }
           />
-          <Area type="monotone" dataKey="revenue" stroke="#4f46e5" fill="#e0e7ff" strokeWidth={2} />
+          <Area type="monotone" dataKey="revenue" stroke="#0d9488" fill="#ccfbf1" strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

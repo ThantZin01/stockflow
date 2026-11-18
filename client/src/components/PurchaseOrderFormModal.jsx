@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal.jsx';
+import { formatMMK } from '../utils/currency.js';
 
 const EMPTY_ITEM = { product: '', quantity: 1, unitCost: 0 };
 
@@ -162,7 +163,7 @@ export const PurchaseOrderFormModal = ({
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-sm">
           <span className="text-slate-600">Estimated Total</span>
-          <span className="font-semibold text-slate-900">${estimatedTotal.toFixed(2)}</span>
+          <span className="font-semibold text-slate-900">{formatMMK(estimatedTotal)}</span>
         </div>
 
         {errorMessage && (

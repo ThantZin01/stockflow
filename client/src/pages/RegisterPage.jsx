@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { AuthLayout } from '../components/auth/AuthLayout.jsx';
+import { AuthAlert, AuthField, AuthSubmit } from '../components/auth/AuthField.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
 export const RegisterPage = () => {
@@ -39,92 +41,60 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-bold tracking-tight text-slate-900">StockFlow</h1>
-        <p className="mt-2 text-center text-sm text-slate-600">
-          Create your account (the first user becomes Admin)
-        </p>
-      </div>
+    <AuthLayout
+      title="Create your account"
+      subtitle="The first user becomes admin. Everyone else starts as staff."
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link
+            to="/login"
+            className="font-semibold text-teal-700 underline-offset-2 hover:text-teal-600 hover:underline"
+          >
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      {errorMessage && <AuthAlert>{errorMessage}</AuthAlert>}
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-sm rounded-xl border border-slate-200 sm:px-10">
-          {errorMessage && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-                Full name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                autoComplete="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="Alex Morgan"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                autoComplete="new-password"
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="At least 6 characters"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full flex justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-60 cursor-pointer"
-            >
-              {isSubmitting ? 'Creating account...' : 'Create account'}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-slate-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          id="name"
+          name="name"
+          label="Full name"
+          type="text"
+          autoComplete="name"
+          placeholder="Alex Morgan"
+          value={formData.name}
+          onChange={handleChange}
+        />
+        <AuthField
+          id="email"
+          name="email"
+          label="Email address"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={formData.email}
+          onChange={handleChange}
+        />
+        <AuthField
+          id="password"
+          name="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          placeholder="At least 6 characters"
+          minLength={6}
+          hint="Minimum 6 characters."
+          value={formData.password}
+          onChange={handleChange}
+        />
+        <AuthSubmit disabled={isSubmitting}>
+          {isSubmitting ? 'Creating account…' : 'Create account'}
+        </AuthSubmit>
+      </form>
+    </AuthLayout>
   );
 };

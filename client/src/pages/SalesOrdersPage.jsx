@@ -13,6 +13,7 @@ import { Pagination } from '../components/Pagination.jsx';
 import { SalesOrderDetailModal } from '../components/SalesOrderDetailModal.jsx';
 import { SalesOrderFormModal } from '../components/SalesOrderFormModal.jsx';
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js';
+import { formatMMK } from '../utils/currency.js';
 
 const STATUS_BADGE = {
   pending: 'bg-slate-100 text-slate-700',

@@ -7,8 +7,11 @@ export const ProtectedRoute = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <p className="text-sm font-medium text-slate-600">Loading session...</p>
+      <div className="min-h-screen min-h-[100dvh] bg-slate-950 flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-xl bg-teal-600/80" />
+          <p className="text-sm font-medium text-slate-300">Loading session…</p>
+        </div>
       </div>
     );
   }

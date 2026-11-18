@@ -27,28 +27,28 @@ export const AppLayout = () => {
     user?.role === 'admin' ? [...navItems, { to: '/users', label: 'Users (Admin)' }] : navItems;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex">
+    <div className="min-h-screen min-h-[100dvh] bg-slate-100 text-slate-900 flex">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-slate-900/40 md:hidden"
+          className="fixed inset-0 z-20 bg-slate-950/50 backdrop-blur-sm md:hidden"
           onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
+          aria-hidden
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-slate-100 flex flex-col transition-transform md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-30 w-[min(18rem,88vw)] bg-gradient-to-b from-slate-950 via-slate-900 to-teal-950 text-slate-100 flex flex-col shadow-2xl transition-transform duration-200 ease-out md:static md:w-64 md:translate-x-0 md:shadow-none ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800">
+        <div className="h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between border-b border-white/10">
           <span className="text-lg font-bold tracking-tight text-white">StockFlow</span>
-          <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-300 uppercase">
+          <span className="rounded-md bg-teal-500/20 px-2 py-0.5 text-[10px] font-semibold text-teal-200 uppercase tracking-wide">
             {user?.role}
           </span>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {links.map((item) => (
             <NavLink
               key={item.to}
@@ -56,10 +56,10 @@ export const AppLayout = () => {
               end={item.end}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                `flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-teal-600 text-white shadow-md shadow-teal-900/30'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
                 }`
               }
             >
@@ -68,42 +68,51 @@ export const AppLayout = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 text-xs text-slate-400">
-          Signed in as <span className="text-slate-200 font-medium">{user?.email}</span>
+        <div className="p-4 border-t border-white/10 text-xs text-slate-400">
+          <p className="truncate">
+            Signed in as <span className="text-slate-200 font-medium">{user?.email}</span>
+          </p>
+          <p className="mt-1 text-teal-400/80">Prices shown in MMK</p>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-10 h-14 sm:h-16 bg-white/90 border-b border-slate-200/80 backdrop-blur-md px-3 sm:px-6 md:px-8 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
               onClick={() => setSidebarOpen((prev) => !prev)}
-              className="md:hidden rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+              aria-label="Open menu"
+              className="md:hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm hover:bg-slate-50 cursor-pointer"
             >
               Menu
             </button>
-            <span className="text-sm font-medium text-slate-600 hidden sm:inline">
-              Inventory &amp; Order Management
-            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-900 truncate md:hidden">StockFlow</p>
+              <p className="text-sm font-medium text-slate-600 hidden md:block truncate">
+                Inventory &amp; order management
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-slate-900">{user?.name}</p>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-slate-900 max-w-[10rem] md:max-w-none truncate">
+                {user?.name}
+              </p>
               <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
             </div>
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+              className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm cursor-pointer"
             >
               Logout
             </button>
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-5 md:p-8 overflow-y-auto">
           <Outlet />
         </main>
       </div>

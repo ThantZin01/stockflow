@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AuthLayout } from '../components/auth/AuthLayout.jsx';
+import { AuthAlert, AuthField, AuthSubmit } from '../components/auth/AuthField.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
 export const LoginPage = () => {
@@ -39,72 +41,48 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-3xl font-bold tracking-tight text-slate-900">StockFlow</h1>
-        <p className="mt-2 text-center text-sm text-slate-600">Sign in to your account</p>
-      </div>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to manage inventory, orders, and reports."
+      footer={
+        <>
+          Don&apos;t have an account?{' '}
+          <Link
+            to="/register"
+            className="font-semibold text-teal-700 underline-offset-2 hover:text-teal-600 hover:underline"
+          >
+            Create an account
+          </Link>
+        </>
+      }
+    >
+      {errorMessage && <AuthAlert>{errorMessage}</AuthAlert>}
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-sm rounded-xl border border-slate-200 sm:px-10">
-          {errorMessage && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full flex justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-60 cursor-pointer"
-            >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-slate-600">
-            Don&apos;t have an account?{' '}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Create an account
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          id="email"
+          name="email"
+          label="Email address"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={formData.email}
+          onChange={handleChange}
+        />
+        <AuthField
+          id="password"
+          name="password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Your password"
+          value={formData.password}
+          onChange={handleChange}
+        />
+        <AuthSubmit disabled={isSubmitting}>
+          {isSubmitting ? 'Signing in…' : 'Sign in'}
+        </AuthSubmit>
+      </form>
+    </AuthLayout>
   );
 };

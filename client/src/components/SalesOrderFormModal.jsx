@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal.jsx';
+import { formatMMK } from '../utils/currency.js';
 
 const EMPTY_ITEM = { product: '', quantity: 1 };
 
@@ -102,7 +103,7 @@ export const SalesOrderFormModal = ({
                     <option value="">Select product</option>
                     {products.map((p) => (
                       <option key={p._id} value={p._id}>
-                        {p.sku} — {p.name} (${Number(p.salePrice).toFixed(2)}, stock: {p.quantity})
+                        {p.sku} — {p.name} ({formatMMK(p.salePrice)}, stock: {p.quantity})
                       </option>
                     ))}
                   </select>
@@ -121,7 +122,7 @@ export const SalesOrderFormModal = ({
                 </div>
                 <div className="col-span-2 text-right text-xs text-slate-600">
                   {matched
-                    ? `$${(Number(item.quantity || 0) * Number(matched.salePrice || 0)).toFixed(2)}`
+                    ? formatMMK((Number(item.quantity || 0) * Number(matched.salePrice || 0)))
                     : '—'}
                 </div>
                 <div className="col-span-1 text-right">
@@ -141,7 +142,7 @@ export const SalesOrderFormModal = ({
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-sm">
           <span className="text-slate-600">Estimated Total (server-verified)</span>
-          <span className="font-semibold text-slate-900">${estimatedTotal.toFixed(2)}</span>
+          <span className="font-semibold text-slate-900">{formatMMK(estimatedTotal)}</span>
         </div>
 
         {errorMessage && (

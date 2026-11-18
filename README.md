@@ -36,7 +36,7 @@ After running `npm --prefix server run seed`, you can sign in with:
 - **Stock & Audit Trail:** Centralized stock mutations through `stock.service.js`, low-stock monitoring (`quantity <= reorderLevel`), manual adjustments with required reasons, and a filterable `StockMovement` history (`IN`, `OUT`, `ADJUSTMENT`).
 - **Purchase Orders (`draft → ordered → received`):** Auto-numbered (`PO-YYYY-0001`), editable while `draft`, and transactional receiving that atomically updates product stock and records `IN` movements.
 - **Sales Orders (`pending → confirmed → completed` / `cancelled`):** Auto-numbered (`SO-YYYY-0001`), server-computed totals with immutable price snapshots, transactional confirmation (atomic stock check + deduction, `409 Conflict` on insufficient stock), and transactional cancellation (restores stock if `confirmed`).
-- **Dashboard & Reports:** Summary KPIs, 30-day sales trend chart (Recharts), top-selling products, and inventory cost/retail valuation by category via MongoDB aggregation pipelines.
+- **Dashboard & Reports:** Summary KPIs, 30-day sales trend chart (Recharts), top-selling products, and inventory cost/retail valuation by category via MongoDB aggregation pipelines. The web UI formats all monetary values in **MMK** (whole kyat).
 - **Production Hardening:** `helmet`, `cors`, `express-rate-limit` (with `trust proxy` enabled), Zod request validation, central error handling, and Jest + Supertest integration tests.
 
 ---
@@ -169,10 +169,20 @@ Create `client/.env`:
 VITE_API_URL=http://localhost:5000/api/v1
 ```
 
-### 3. Seed Demo Data
+### 3. Seed data for testing
+
+**Option A — your account stays, catalog/orders only (recommended after you register):**
+```bash
+npm --prefix server run seed:mock
+```
+Requires at least one user in the database (register via the app, or use Option B once).
+
+**Option B — full reset with demo logins (`admin@stockflow.dev` / `Admin123!`, `staff@stockflow.dev` / `Staff123!`):**
 ```bash
 npm --prefix server run seed
 ```
+
+Mock data includes 5 categories, 3 Myanmar suppliers, 31 products (MMK prices), low-stock and archived samples, purchase orders in every status, and sales orders for confirm / complete / cancel flows.
 
 ### 4. Run Locally
 ```bash

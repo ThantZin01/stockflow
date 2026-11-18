@@ -16,12 +16,12 @@ import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
 import { RoleRoute } from './routes/RoleRoute.jsx';
 
 const NotFoundPage = () => (
-  <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+  <div className="min-h-screen min-h-[100dvh] bg-gradient-to-b from-slate-100 to-slate-200 flex flex-col items-center justify-center p-6 text-center">
     <h1 className="text-4xl font-bold text-slate-900">404</h1>
     <p className="mt-2 text-slate-600">Page not found.</p>
     <Link
       to="/"
-      className="mt-4 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500"
+      className="mt-4 inline-flex items-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 hover:bg-teal-500"
     >
       Back to Dashboard
     </Link>

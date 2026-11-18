@@ -8,7 +8,11 @@ const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET'];
 
 for (const key of requiredEnvVars) {
   if (!process.env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`);
+    throw new Error(
+      `Missing required environment variable: ${key}. ` +
+        `Copy server/.env.example to server/.env and set your MongoDB Atlas (or local) URI and JWT_SECRET. ` +
+        `Expected file: ${envPath}`
+    );
   }
 }
 

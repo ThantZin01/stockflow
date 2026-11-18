@@ -6,6 +6,7 @@ import { fetchStockMovements } from '../api/stock.api.js';
 import { MovementsTable } from '../components/MovementsTable.jsx';
 import { Pagination } from '../components/Pagination.jsx';
 import { StockAdjustForm } from '../components/StockAdjustForm.jsx';
+import { formatMMK } from '../utils/currency.js';
 
 export const ProductDetailPage = () => {
   const { id } = useParams();
@@ -83,10 +84,10 @@ export const ProductDetailPage = () => {
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Pricing</p>
           <p className="mt-2 text-lg font-semibold text-slate-900">
-            Sale: ${Number(product.salePrice).toFixed(2)}
+            Sale: {formatMMK(product.salePrice)}
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Cost: ${Number(product.costPrice).toFixed(2)}
+            Cost: {formatMMK(product.costPrice)}
           </p>
         </div>
 

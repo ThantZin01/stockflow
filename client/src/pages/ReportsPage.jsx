@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { fetchSalesReport, fetchStockValue, fetchTopProducts } from '../api/reports.api.js';
 import { SalesChart } from '../components/SalesChart.jsx';
 import { StatCard } from '../components/StatCard.jsx';
+import { formatMMK } from '../utils/currency.js';
 
 export const ReportsPage = () => {
   const [from, setFrom] = useState('');
@@ -47,20 +48,16 @@ export const ReportsPage = () => {
           subtext="Across active products"
         />
         <StatCard
-          label="Inventory Cost Value"
+          label="Inventory Cost Value (MMK)"
           value={
-            stockValueQuery.isLoading
-              ? '...'
-              : `$${Number(stockValue?.totalCostValue ?? 0).toFixed(2)}`
+            stockValueQuery.isLoading ? '...' : formatMMK(stockValue?.totalCostValue ?? 0)
           }
           subtext="Sum of quantity × cost price"
         />
         <StatCard
-          label="Inventory Retail Value"
+          label="Inventory Retail Value (MMK)"
           value={
-            stockValueQuery.isLoading
-              ? '...'
-              : `$${Number(stockValue?.totalRetailValue ?? 0).toFixed(2)}`
+            stockValueQuery.isLoading ? '...' : formatMMK(stockValue?.totalRetailValue ?? 0)
           }
           subtext="Sum of quantity × sale price"
           accent="text-indigo-600"
@@ -152,7 +149,7 @@ export const ReportsPage = () => {
                       </td>
                       <td className="px-6 py-3 text-right font-medium">{p.unitsSold}</td>
                       <td className="px-6 py-3 text-right font-medium text-slate-900">
-                        ${Number(p.revenue).toFixed(2)}
+                        {formatMMK(p.revenue)}
                       </td>
                     </tr>
                   ))}
@@ -191,10 +188,10 @@ export const ReportsPage = () => {
                       <td className="px-6 py-3 font-medium text-slate-900">{cat.categoryName}</td>
                       <td className="px-6 py-3 text-right text-slate-700">{cat.totalUnits}</td>
                       <td className="px-6 py-3 text-right font-medium text-slate-900">
-                        ${Number(cat.costValue).toFixed(2)}
+                        {formatMMK(cat.costValue)}
                       </td>
                       <td className="px-6 py-3 text-right text-slate-600">
-                        ${Number(cat.retailValue).toFixed(2)}
+                        {formatMMK(cat.retailValue)}
                       </td>
                     </tr>
                   ))}

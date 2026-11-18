@@ -1,4 +1,5 @@
 import { Modal } from './Modal.jsx';
+import { formatMMK } from '../utils/currency.js';
 
 const STATUS_BADGE = {
   draft: 'bg-slate-100 text-slate-700',
@@ -67,9 +68,9 @@ export const PurchaseOrderDetailModal = ({ order, onClose }) => {
                     <div className="font-mono text-slate-500">{item.sku}</div>
                   </td>
                   <td className="px-3 py-2 text-right">{item.quantity}</td>
-                  <td className="px-3 py-2 text-right">${Number(item.unitCost).toFixed(2)}</td>
+                  <td className="px-3 py-2 text-right">{formatMMK(item.unitCost)}</td>
                   <td className="px-3 py-2 text-right font-medium">
-                    ${(item.quantity * item.unitCost).toFixed(2)}
+                    {formatMMK(item.quantity * item.unitCost)}
                   </td>
                 </tr>
               ))}
@@ -79,7 +80,7 @@ export const PurchaseOrderDetailModal = ({ order, onClose }) => {
 
         <div className="flex justify-between items-center border-t border-slate-200 pt-3 font-semibold">
           <span>Total</span>
-          <span>${Number(order.total).toFixed(2)}</span>
+          <span>{formatMMK(order.total)}</span>
         </div>
       </div>
     </Modal>

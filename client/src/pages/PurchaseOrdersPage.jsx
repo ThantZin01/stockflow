@@ -13,6 +13,7 @@ import { fetchSuppliers } from '../api/suppliers.api.js';
 import { Pagination } from '../components/Pagination.jsx';
 import { PurchaseOrderDetailModal } from '../components/PurchaseOrderDetailModal.jsx';
 import { PurchaseOrderFormModal } from '../components/PurchaseOrderFormModal.jsx';
+import { formatMMK } from '../utils/currency.js';
 
 const STATUS_BADGE = {
   draft: 'bg-slate-100 text-slate-700',
@@ -191,7 +192,7 @@ export const PurchaseOrdersPage = () => {
                     <td className="px-6 py-3 text-slate-700">{po.supplier?.name || '—'}</td>
                     <td className="px-6 py-3 text-slate-600">{po.items.length}</td>
                     <td className="px-6 py-3 text-right font-medium text-slate-900">
-                      ${Number(po.total).toFixed(2)}
+                      {formatMMK(po.total)}
                     </td>
                     <td className="px-6 py-3">
                       <span

@@ -6,6 +6,7 @@ import { LowStockTable } from '../components/LowStockTable.jsx';
 import { SalesChart } from '../components/SalesChart.jsx';
 import { StatCard } from '../components/StatCard.jsx';
 import { useAuth } from '../hooks/useAuth.js';
+import { formatMMK } from '../utils/currency.js';
 
 export const DashboardPage = () => {
   const { user } = useAuth();
@@ -60,9 +61,9 @@ export const DashboardPage = () => {
           subtext="Non-cancelled sales orders"
         />
         <StatCard
-          label="Revenue This Month"
+          label="Revenue This Month (MMK)"
           value={
-            summaryQuery.isLoading ? '...' : `$${Number(summary?.revenueThisMonth ?? 0).toFixed(2)}`
+            summaryQuery.isLoading ? '...' : formatMMK(summary?.revenueThisMonth ?? 0)
           }
           subtext="Confirmed & completed orders"
           accent="text-emerald-600"
@@ -70,10 +71,10 @@ export const DashboardPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-900">Sales (Last 30 Days)</h2>
-            <Link to="/reports" className="text-xs font-medium text-indigo-600 hover:underline">
+            <Link to="/reports" className="text-xs font-medium text-teal-700 hover:underline">
               Full reports &rarr;
             </Link>
           </div>
@@ -88,7 +89,7 @@ export const DashboardPage = () => {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-900">Low Stock Alerts</h2>
-            <Link to="/stock" className="text-xs font-medium text-indigo-600 hover:underline">
+            <Link to="/stock" className="text-xs font-medium text-teal-700 hover:underline">
               Manage stock &rarr;
             </Link>
           </div>

@@ -6,8 +6,8 @@ export const RoleRoute = ({ allowedRoles = [] }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <p className="text-sm font-medium text-slate-600">Checking permissions...</p>
+      <div className="min-h-screen min-h-[100dvh] bg-slate-100 flex items-center justify-center p-6">
+        <p className="text-sm font-medium text-slate-600">Checking permissions…</p>
       </div>
     );
   }

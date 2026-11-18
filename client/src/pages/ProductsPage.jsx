@@ -13,6 +13,7 @@ import { fetchSuppliers } from '../api/suppliers.api.js';
 import { Pagination } from '../components/Pagination.jsx';
 import { ProductFormModal } from '../components/ProductFormModal.jsx';
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js';
+import { formatMMK } from '../utils/currency.js';
 
 export const ProductsPage = () => {
   const queryClient = useQueryClient();
@@ -104,7 +105,7 @@ export const ProductsPage = () => {
             setErrorMessage('');
             setModalOpen(true);
           }}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-medium text-white hover:bg-indigo-500 cursor-pointer"
+          className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-teal-600/20 hover:bg-teal-500 cursor-pointer"
         >
           + Add Product
         </button>
@@ -228,7 +229,7 @@ export const ProductsPage = () => {
                         <div className="flex items-center gap-2">
                           <Link
                             to={`/products/${prod._id}`}
-                            className="font-medium text-indigo-600 hover:underline"
+                            className="font-medium text-teal-700 hover:underline"
                           >
                             {prod.name}
                           </Link>
@@ -245,10 +246,8 @@ export const ProductsPage = () => {
                         <div className="text-xs text-slate-400">{prod.supplier?.name || '—'}</div>
                       </td>
                       <td className="px-6 py-4 text-slate-700">
-                        <div>Sale: ${Number(prod.salePrice).toFixed(2)}</div>
-                        <div className="text-xs text-slate-400">
-                          Cost: ${Number(prod.costPrice).toFixed(2)}
-                        </div>
+                        <div>Sale: {formatMMK(prod.salePrice)}</div>
+                        <div className="text-xs text-slate-400">Cost: {formatMMK(prod.costPrice)}</div>
                       </td>
                       <td className="px-6 py-4">
                         <span

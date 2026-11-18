@@ -126,7 +126,7 @@ export const ProductFormModal = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-700">Cost Price *</label>
+            <label className="block text-xs font-medium text-slate-700">Cost Price (MMK) *</label>
             <input
               name="costPrice"
               type="number"
@@ -139,7 +139,7 @@ export const ProductFormModal = ({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700">Sale Price *</label>
+            <label className="block text-xs font-medium text-slate-700">Sale Price (MMK) *</label>
             <input
               name="salePrice"
               type="number"
