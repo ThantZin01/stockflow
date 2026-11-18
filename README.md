@@ -7,7 +7,7 @@ A full-stack MERN inventory and order management platform designed for small bus
 ## Live Deployment & Demo Accounts
 
 - **API Health Check:** `https://stockflow-api-one.vercel.app/api/v1/health`
-- **Frontend App:** `https://<your-frontend-project>.vercel.app` *(update with your Vercel client URL)*
+- **Frontend App:** `https://stockflow-sigma-liard.vercel.app/`
 
 After running `npm --prefix server run seed`, you can sign in with:
 
