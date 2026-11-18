@@ -192,7 +192,7 @@ export const SalesOrdersPage = () => {
                     </td>
                     <td className="px-6 py-3 text-slate-600">{so.items.length}</td>
                     <td className="px-6 py-3 text-right font-medium text-slate-900">
-                      ${Number(so.total).toFixed(2)}
+                      {formatMMK(so.total)}
                     </td>
                     <td className="px-6 py-3">
                       <span
