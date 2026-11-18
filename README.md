@@ -7,9 +7,13 @@ A full-stack MERN inventory and order management platform built with strict serv
 ## Live Deployment & Demo Accounts
 
 - **API Health Check:** `https://stockflow-api-one.vercel.app/api/v1/health`
-- **Frontend App:** `https://<your-frontend-project>.vercel.app` *(update with your Vercel client URL)*
+- **Frontend App:** `https://stockflow-sigma-liard.vercel.app`
 
 After running `npm --prefix server run seed`, you can sign in with:
+
+You can Test with 
+Email: test@example.com
+Password: password
 
 | Role | Email | Password |
 |---|---|---|
@@ -22,10 +26,10 @@ After running `npm --prefix server run seed`, you can sign in with:
 
 ## Screenshots
 
-> Add screenshots of the live app to `docs/screenshots/` before sharing:
 > - `docs/screenshots/dashboard.png` — KPI cards, 30-day sales chart, and low-stock alerts
 > - `docs/screenshots/products.png` — Product catalog with search, filters, and pagination
-> - `docs/screenshots/orders.png` — Purchase & sales order workflows
+> - `docs/screenshots/purchase_order.png` — Purchase order workflows
+> - `docs/screenshots/sale_order.png` — Sale order workflows
 
 ---
 
