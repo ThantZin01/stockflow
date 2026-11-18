@@ -26,4 +26,3 @@ export const deleteSupplier = asyncHandler(async (req, res) => {
   const deleted = await supplierService.deleteSupplier(req.params.id);
   return sendSuccess(res, deleted, 200);
 });
-

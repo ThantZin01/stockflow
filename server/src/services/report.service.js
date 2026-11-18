@@ -1,5 +1,11 @@
 import { Product } from '../models/Product.model.js';
 import { SalesOrder } from '../models/SalesOrder.model.js';
+import {
+  appTimeZone,
+  parseZonedDate,
+  startOfZonedDay,
+  startOfZonedMonth,
+} from '../utils/zonedDate.js';
 
 const REVENUE_STATUSES = ['confirmed', 'completed'];
 
@@ -8,8 +14,8 @@ const REVENUE_STATUSES = ['confirmed', 'completed'];
  */
 export const getSummary = async () => {
   const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfDay = startOfZonedDay(now);
+  const startOfMonth = startOfZonedMonth(now);
 
   const [totalProducts, lowStockCount, ordersToday, monthlyRevenueAgg] = await Promise.all([
     Product.countDocuments({ isArchived: false }),
@@ -52,14 +58,10 @@ export const getSummary = async () => {
  * calendar day directly in MongoDB instead of loading all orders into Node.js.
  */
 export const getSalesByDate = async ({ from, to }) => {
-  const endDate = to ? new Date(`${to}T23:59:59.999`) : new Date();
+  const endDate = to ? parseZonedDate(to, { end: true }) : new Date();
   const startDate = from
-    ? new Date(`${from}T00:00:00.000`)
-    : new Date(endDate.getTime() - 29 * 24 * 60 * 60 * 1000);
-
-  if (!from) {
-    startDate.setHours(0, 0, 0, 0);
-  }
+    ? parseZonedDate(from)
+    : startOfZonedDay(new Date(endDate.getTime() - 29 * 24 * 60 * 60 * 1000));
 
   const rows = await SalesOrder.aggregate([
     {
@@ -70,7 +72,9 @@ export const getSalesByDate = async ({ from, to }) => {
     },
     {
       $group: {
-        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+        _id: {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: appTimeZone },
+        },
         revenue: { $sum: '$total' },
         orders: { $sum: 1 },
       },

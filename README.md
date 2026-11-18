@@ -159,7 +159,10 @@ JWT_SECRET=replace_with_a_strong_secret
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 NODE_ENV=development
+APP_TIMEZONE=UTC
 ```
+
+`APP_TIMEZONE` is an IANA name (`Asia/Bangkok`, `America/New_York`). Dashboard "today", monthly revenue, and sales-by-day buckets use it. The default `UTC` matches a server that has not set one.
 
 Create `client/.env`:
 ```env
@@ -189,7 +192,7 @@ npm --prefix client run lint
 ## Deployment (MongoDB Atlas + Vercel)
 
 1. **MongoDB Atlas:** Create an M0 cluster (supports replica-set transactions), add a database user, and whitelist `0.0.0.0/0` in **Network Access**.
-2. **Backend (Vercel):** Import the repository with Root Directory `server` and Framework Preset `Other`. Set `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV=production`, and `CLIENT_URL`.
+2. **Backend (Vercel):** Import the repository with Root Directory `server` and Framework Preset `Other`. Set `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV=production`, `CLIENT_URL`, and `APP_TIMEZONE` (for example `Asia/Bangkok`).
 3. **Frontend (Vercel):** Import the repository with Root Directory `client` and Framework Preset `Vite`. Set `VITE_API_URL=https://<your-backend>.vercel.app/api/v1`.
 4. **CORS Sync:** Update `CLIENT_URL` on the backend Vercel project to your live frontend URL and redeploy.
 

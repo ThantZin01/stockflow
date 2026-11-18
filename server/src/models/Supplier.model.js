@@ -35,4 +35,3 @@ const supplierSchema = new mongoose.Schema(
 );
 
 export const Supplier = mongoose.model('Supplier', supplierSchema);
-

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { collectPages } from '../api/collectPages.js';
 import { fetchProducts } from '../api/products.api.js';
 import { fetchLowStock, fetchStockMovements } from '../api/stock.api.js';
 import { LowStockTable } from '../components/LowStockTable.jsx';
@@ -26,11 +27,14 @@ export const StockPage = () => {
 
   // Dropdown options for the adjust form and the product filter.
   const productsQuery = useQuery({
-    queryKey: ['products', { sort: 'name_asc', limit: 200 }],
-    queryFn: () => fetchProducts({ sort: 'name_asc', page: 1, limit: 200 }),
+    queryKey: ['products', 'options'],
+    queryFn: () =>
+      collectPages((pageNumber) =>
+        fetchProducts({ sort: 'name_asc', page: pageNumber, limit: 200 })
+      ),
   });
 
-  const products = productsQuery.data?.data || [];
+  const products = productsQuery.data || [];
   const lowMeta = lowStockQuery.data?.meta;
   const movementMeta = movementsQuery.data?.meta;
 

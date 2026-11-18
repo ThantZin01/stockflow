@@ -1,4 +1,5 @@
 import { Product } from '../models/Product.model.js';
+import { PurchaseOrder } from '../models/PurchaseOrder.model.js';
 import { Supplier } from '../models/Supplier.model.js';
 import { ApiError } from '../utils/ApiError.js';
 
@@ -56,9 +57,15 @@ export const updateSupplier = async (id, payload) => {
 };
 
 export const deleteSupplier = async (id) => {
-  const inUse = await Product.exists({ supplier: id });
+  const [inUse, referencedByOrder] = await Promise.all([
+    Product.exists({ supplier: id }),
+    PurchaseOrder.exists({ supplier: id }),
+  ]);
   if (inUse) {
     throw new ApiError(409, 'Cannot delete supplier because products are assigned to it');
+  }
+  if (referencedByOrder) {
+    throw new ApiError(409, 'Cannot delete supplier because purchase orders reference it');
   }
 
   const deleted = await Supplier.findByIdAndDelete(id).lean();
@@ -68,4 +75,3 @@ export const deleteSupplier = async (id) => {
 
   return deleted;
 };
-

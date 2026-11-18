@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCategories } from '../api/categories.api.js';
+import { collectPages } from '../api/collectPages.js';
 import {
   archiveProduct,
   createProduct,
@@ -11,10 +12,12 @@ import {
 import { fetchSuppliers } from '../api/suppliers.api.js';
 import { Pagination } from '../components/Pagination.jsx';
 import { ProductFormModal } from '../components/ProductFormModal.jsx';
+import { useDebouncedValue } from '../hooks/useDebouncedValue.js';
 
 export const ProductsPage = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [category, setCategory] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);
@@ -26,10 +29,13 @@ export const ProductsPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['products', { search, category, lowStockOnly, includeArchived, sort, page }],
+    queryKey: [
+      'products',
+      { search: debouncedSearch, category, lowStockOnly, includeArchived, sort, page },
+    ],
     queryFn: () =>
       fetchProducts({
-        search,
+        search: debouncedSearch,
         category,
         lowStock: lowStockOnly ? 'true' : '',
         includeArchived: includeArchived ? 'true' : 'false',
@@ -40,13 +46,13 @@ export const ProductsPage = () => {
   });
 
   const categoriesQuery = useQuery({
-    queryKey: ['categories', { limit: 100 }],
-    queryFn: () => fetchCategories({ page: 1, limit: 100 }),
+    queryKey: ['categories', 'options'],
+    queryFn: () => collectPages((pageNumber) => fetchCategories({ page: pageNumber, limit: 200 })),
   });
 
   const suppliersQuery = useQuery({
-    queryKey: ['suppliers', { limit: 100 }],
-    queryFn: () => fetchSuppliers({ page: 1, limit: 100 }),
+    queryKey: ['suppliers', 'options'],
+    queryFn: () => collectPages((pageNumber) => fetchSuppliers({ page: pageNumber, limit: 200 })),
   });
 
   const closeModal = () => {
@@ -62,6 +68,7 @@ export const ProductsPage = () => {
         : createProduct(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
       closeModal();
     },
     onError: (err) => setErrorMessage(err.message),
@@ -71,14 +78,15 @@ export const ProductsPage = () => {
     mutationFn: archiveProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
     },
     onError: (err) => setErrorMessage(err.message),
   });
 
   const products = data?.data || [];
   const meta = data?.meta || { page: 1, totalPages: 1, total: 0 };
-  const categories = categoriesQuery.data?.data || [];
-  const suppliers = suppliersQuery.data?.data || [];
+  const categories = categoriesQuery.data || [];
+  const suppliers = suppliersQuery.data || [];
 
   return (
     <div className="space-y-6">

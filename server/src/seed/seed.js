@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { connectDB } from '../config/db.js';
+import { env } from '../config/env.js';
 import { Category } from '../models/Category.model.js';
 import { Product } from '../models/Product.model.js';
 import { PurchaseOrder } from '../models/PurchaseOrder.model.js';
@@ -14,8 +15,16 @@ import * as stockService from '../services/stock.service.js';
 import { CATEGORIES, PRODUCTS, SUPPLIERS } from './seedData.js';
 
 const seed = async () => {
+  if (env.NODE_ENV === 'production') {
+    console.error(
+      'Refusing to seed while NODE_ENV=production. This script deletes every collection.'
+    );
+    process.exit(1);
+  }
+
   await connectDB();
 
+  console.log(`Seeding database "${mongoose.connection.name}" on ${mongoose.connection.host}`);
   console.log('Clearing existing collections...');
   await Promise.all([
     StockMovement.deleteMany({}),

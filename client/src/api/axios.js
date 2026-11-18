@@ -20,10 +20,21 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+    const isCredentialAttempt = url.includes('/auth/login') || url.includes('/auth/register');
+    const sessionRejected = status === 401 || (status === 403 && url.includes('/auth/me'));
+
+    // A failed login is a 401 too, and must not wipe a session that was never stored.
+    if (sessionRejected && !isCredentialAttempt) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      window.dispatchEvent(new Event('stockflow:unauthorized'));
+    }
+
     const message =
       error.response?.data?.message || error.message || 'An unexpected error occurred';
     const customError = new Error(message);
-    customError.statusCode = error.response?.status;
+    customError.statusCode = status;
     return Promise.reject(customError);
   }
 );

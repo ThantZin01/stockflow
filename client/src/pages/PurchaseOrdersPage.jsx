@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { collectPages } from '../api/collectPages.js';
 import { fetchProducts } from '../api/products.api.js';
 import {
   createPurchaseOrder,
@@ -37,13 +38,16 @@ export const PurchaseOrdersPage = () => {
   });
 
   const suppliersQuery = useQuery({
-    queryKey: ['suppliers', { limit: 100 }],
-    queryFn: () => fetchSuppliers({ page: 1, limit: 100 }),
+    queryKey: ['suppliers', 'options'],
+    queryFn: () => collectPages((pageNumber) => fetchSuppliers({ page: pageNumber, limit: 200 })),
   });
 
   const productsQuery = useQuery({
-    queryKey: ['products', { sort: 'name_asc', limit: 200 }],
-    queryFn: () => fetchProducts({ sort: 'name_asc', page: 1, limit: 200 }),
+    queryKey: ['products', 'options'],
+    queryFn: () =>
+      collectPages((pageNumber) =>
+        fetchProducts({ sort: 'name_asc', page: pageNumber, limit: 200 })
+      ),
   });
 
   const closeForm = () => {
@@ -56,6 +60,7 @@ export const PurchaseOrdersPage = () => {
     queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
     queryClient.invalidateQueries({ queryKey: ['products'] });
     queryClient.invalidateQueries({ queryKey: ['stock'] });
+    queryClient.invalidateQueries({ queryKey: ['reports'] });
   };
 
   const saveMutation = useMutation({
@@ -90,8 +95,8 @@ export const PurchaseOrdersPage = () => {
 
   const orders = ordersQuery.data?.data || [];
   const meta = ordersQuery.data?.meta;
-  const suppliers = suppliersQuery.data?.data || [];
-  const products = productsQuery.data?.data || [];
+  const suppliers = suppliersQuery.data || [];
+  const products = productsQuery.data || [];
 
   const inputClass =
     'rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500';

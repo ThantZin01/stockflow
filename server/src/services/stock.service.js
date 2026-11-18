@@ -1,6 +1,8 @@
 import { Product } from '../models/Product.model.js';
 import { StockMovement } from '../models/StockMovement.model.js';
 import { ApiError } from '../utils/ApiError.js';
+import { runInTransaction } from '../utils/transaction.js';
+import { parseZonedDate } from '../utils/zonedDate.js';
 
 /**
  * Records an immutable StockMovement entry.
@@ -39,30 +41,32 @@ export const increaseStock = async (
     throw new ApiError(400, 'Increase quantity must be greater than 0');
   }
 
-  const product = await Product.findByIdAndUpdate(
-    productId,
-    { $inc: { quantity } },
-    { new: true, session }
-  );
-
-  if (!product) {
-    throw new ApiError(404, 'Product not found');
-  }
-
-  await createMovement(
-    {
+  return runInTransaction(session, async (activeSession) => {
+    const product = await Product.findByIdAndUpdate(
       productId,
-      type: 'IN',
-      quantity,
-      reason,
-      refType,
-      refId,
-      userId,
-    },
-    session
-  );
+      { $inc: { quantity } },
+      { new: true, session: activeSession }
+    );
 
-  return product;
+    if (!product) {
+      throw new ApiError(404, 'Product not found');
+    }
+
+    await createMovement(
+      {
+        productId,
+        type: 'IN',
+        quantity,
+        reason,
+        refType,
+        refId,
+        userId,
+      },
+      activeSession
+    );
+
+    return product;
+  });
 };
 
 /**
@@ -77,37 +81,42 @@ export const decreaseStock = async (
     throw new ApiError(400, 'Decrease quantity must be greater than 0');
   }
 
-  const product = await Product.findOneAndUpdate(
-    { _id: productId, quantity: { $gte: quantity } },
-    { $inc: { quantity: -quantity } },
-    { new: true, session }
-  );
-
-  if (!product) {
-    const exists = await Product.findById(productId).select('sku name quantity').lean();
-    if (!exists) {
-      throw new ApiError(404, 'Product not found');
-    }
-    throw new ApiError(
-      409,
-      `Insufficient stock for ${exists.sku} (available: ${exists.quantity}, requested: ${quantity})`
+  return runInTransaction(session, async (activeSession) => {
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, quantity: { $gte: quantity } },
+      { $inc: { quantity: -quantity } },
+      { new: true, session: activeSession }
     );
-  }
 
-  await createMovement(
-    {
-      productId,
-      type: 'OUT',
-      quantity: -quantity,
-      reason,
-      refType,
-      refId,
-      userId,
-    },
-    session
-  );
+    if (!product) {
+      const exists = await Product.findById(productId)
+        .select('sku name quantity')
+        .session(activeSession)
+        .lean();
+      if (!exists) {
+        throw new ApiError(404, 'Product not found');
+      }
+      throw new ApiError(
+        409,
+        `Insufficient stock for ${exists.sku} (available: ${exists.quantity}, requested: ${quantity})`
+      );
+    }
 
-  return product;
+    await createMovement(
+      {
+        productId,
+        type: 'OUT',
+        quantity: -quantity,
+        reason,
+        refType,
+        refId,
+        userId,
+      },
+      activeSession
+    );
+
+    return product;
+  });
 };
 
 /**
@@ -125,37 +134,47 @@ export const adjustStock = async ({ productId, quantityChange, reason, userId })
       ? { _id: productId, isArchived: false, quantity: { $gte: Math.abs(quantityChange) } }
       : { _id: productId, isArchived: false };
 
-  const product = await Product.findOneAndUpdate(
-    filter,
-    { $inc: { quantity: quantityChange } },
-    { new: true }
-  )
+  const movement = await runInTransaction(null, async (activeSession) => {
+    const updated = await Product.findOneAndUpdate(
+      filter,
+      { $inc: { quantity: quantityChange } },
+      { new: true, session: activeSession }
+    );
+
+    if (!updated) {
+      const exists = await Product.findById(productId)
+        .select('sku quantity isArchived')
+        .session(activeSession)
+        .lean();
+      if (!exists) {
+        throw new ApiError(404, 'Product not found');
+      }
+      if (exists.isArchived) {
+        throw new ApiError(409, `Cannot adjust stock for archived product ${exists.sku}`);
+      }
+      throw new ApiError(
+        409,
+        `Insufficient stock for ${exists.sku} (current stock: ${exists.quantity})`
+      );
+    }
+
+    return createMovement(
+      {
+        productId,
+        type: 'ADJUSTMENT',
+        quantity: quantityChange,
+        reason,
+        refType: 'MANUAL',
+        userId,
+      },
+      activeSession
+    );
+  });
+
+  const product = await Product.findById(productId)
     .populate('category', 'name')
     .populate('supplier', 'name')
     .lean();
-
-  if (!product) {
-    const exists = await Product.findById(productId).select('sku quantity isArchived').lean();
-    if (!exists) {
-      throw new ApiError(404, 'Product not found');
-    }
-    if (exists.isArchived) {
-      throw new ApiError(409, `Cannot adjust stock for archived product ${exists.sku}`);
-    }
-    throw new ApiError(
-      409,
-      `Insufficient stock for ${exists.sku} (current stock: ${exists.quantity})`
-    );
-  }
-
-  const movement = await createMovement({
-    productId,
-    type: 'ADJUSTMENT',
-    quantity: quantityChange,
-    reason,
-    refType: 'MANUAL',
-    userId,
-  });
 
   return { product, movement };
 };
@@ -204,9 +223,8 @@ export const listMovements = async ({ product, type, from, to, page = 1, limit =
 
   if (from || to) {
     filter.createdAt = {};
-    // Date-only strings are expanded to full days in the server's local time.
-    if (from) filter.createdAt.$gte = new Date(`${from}T00:00:00.000`);
-    if (to) filter.createdAt.$lte = new Date(`${to}T23:59:59.999`);
+    if (from) filter.createdAt.$gte = parseZonedDate(from);
+    if (to) filter.createdAt.$lte = parseZonedDate(to, { end: true });
   }
 
   const skip = (page - 1) * limit;

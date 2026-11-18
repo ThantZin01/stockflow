@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { collectPages } from '../api/collectPages.js';
 import { fetchProducts } from '../api/products.api.js';
 import {
   cancelSalesOrder,
@@ -11,6 +12,7 @@ import {
 import { Pagination } from '../components/Pagination.jsx';
 import { SalesOrderDetailModal } from '../components/SalesOrderDetailModal.jsx';
 import { SalesOrderFormModal } from '../components/SalesOrderFormModal.jsx';
+import { useDebouncedValue } from '../hooks/useDebouncedValue.js';
 
 const STATUS_BADGE = {
   pending: 'bg-slate-100 text-slate-700',
@@ -23,6 +25,7 @@ export const SalesOrdersPage = () => {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
   const [page, setPage] = useState(1);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -31,19 +34,23 @@ export const SalesOrdersPage = () => {
   const [actionError, setActionError] = useState('');
 
   const ordersQuery = useQuery({
-    queryKey: ['sales-orders', { status, search, page }],
-    queryFn: () => fetchSalesOrders({ status, search, page, limit: 10 }),
+    queryKey: ['sales-orders', { status, search: debouncedSearch, page }],
+    queryFn: () => fetchSalesOrders({ status, search: debouncedSearch, page, limit: 10 }),
   });
 
   const productsQuery = useQuery({
-    queryKey: ['products', { sort: 'name_asc', limit: 200 }],
-    queryFn: () => fetchProducts({ sort: 'name_asc', page: 1, limit: 200 }),
+    queryKey: ['products', 'options'],
+    queryFn: () =>
+      collectPages((pageNumber) =>
+        fetchProducts({ sort: 'name_asc', page: pageNumber, limit: 200 })
+      ),
   });
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
     queryClient.invalidateQueries({ queryKey: ['products'] });
     queryClient.invalidateQueries({ queryKey: ['stock'] });
+    queryClient.invalidateQueries({ queryKey: ['reports'] });
   };
 
   const createMutation = useMutation({
@@ -88,7 +95,7 @@ export const SalesOrdersPage = () => {
 
   const orders = ordersQuery.data?.data || [];
   const meta = ordersQuery.data?.meta;
-  const products = productsQuery.data?.data || [];
+  const products = productsQuery.data || [];
 
   const inputClass =
     'rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500';

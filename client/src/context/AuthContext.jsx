@@ -12,6 +12,12 @@ export const AuthProvider = ({ children }) => {
   );
 
   useEffect(() => {
+    const onUnauthorized = () => setUser(null);
+    window.addEventListener('stockflow:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('stockflow:unauthorized', onUnauthorized);
+  }, []);
+
+  useEffect(() => {
     const token = localStorage.getItem(TOKEN_STORAGE_KEY);
     if (!token) {
       return;
@@ -25,8 +31,12 @@ export const AuthProvider = ({ children }) => {
           setUser(res.data);
         }
       })
-      .catch(() => {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      .catch((error) => {
+        // Network and 429 failures keep the token so a reload can recover.
+        // 401/403 mean the session itself was rejected.
+        if (error.statusCode === 401 || error.statusCode === 403) {
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
+        }
         if (isMounted) {
           setUser(null);
         }

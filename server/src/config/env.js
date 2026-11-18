@@ -12,6 +12,14 @@ for (const key of requiredEnvVars) {
   }
 }
 
+const appTimeZone = process.env.APP_TIMEZONE || 'UTC';
+
+try {
+  Intl.DateTimeFormat('en-US', { timeZone: appTimeZone });
+} catch {
+  throw new Error(`Invalid APP_TIMEZONE: ${appTimeZone}`);
+}
+
 export const env = {
   PORT: Number(process.env.PORT) || 5000,
   MONGODB_URI: process.env.MONGODB_URI,
@@ -19,4 +27,5 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   NODE_ENV: process.env.NODE_ENV || 'development',
+  APP_TIMEZONE: appTimeZone,
 };

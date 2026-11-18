@@ -58,7 +58,8 @@ describe('StockFlow API key workflows', () => {
 
     const me = await request(app).get('/api/v1/auth/me').set('Authorization', `Bearer ${token}`);
     expect(me.status).toBe(200);
-    expect(me.body.data.user.email).toBe(testEmail);
+    expect(me.body.data.email).toBe(testEmail);
+    expect(me.body.data.passwordHash).toBeUndefined();
   });
 
   test('Product create: duplicate SKU returns 409', async () => {

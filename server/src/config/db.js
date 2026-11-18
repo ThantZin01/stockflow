@@ -16,10 +16,13 @@ if (!process.env.VERCEL && env.NODE_ENV === 'development') {
  * pool singleton once `mongoose.connect()` resolves. Models imported anywhere
  * in the app automatically use this active connection.
  *
- * We explicitly pass `dbName: 'stockflow'` so that even if `MONGODB_URI` omits
- * the path segment after `.mongodb.net/`, Mongoose writes to `stockflow`
- * instead of MongoDB's default `test` database.
+ * We explicitly pass `dbName` so that even if `MONGODB_URI` omits the path
+ * segment after `.mongodb.net/`, Mongoose writes to `stockflow` instead of
+ * MongoDB's default `test` database. Tests use a separate database so Jest
+ * never reads or deletes the application data.
  */
+const dbName = env.NODE_ENV === 'test' ? 'stockflow_test' : 'stockflow';
+
 let connectionPromise = null;
 
 export const connectDB = async () => {
@@ -30,7 +33,7 @@ export const connectDB = async () => {
   if (!connectionPromise) {
     connectionPromise = mongoose
       .connect(env.MONGODB_URI, {
-        dbName: 'stockflow',
+        dbName,
         serverSelectionTimeoutMS: 8000,
       })
       .then((conn) => {

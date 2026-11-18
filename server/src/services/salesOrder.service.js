@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Product } from '../models/Product.model.js';
 import { SalesOrder } from '../models/SalesOrder.model.js';
 import { ApiError } from '../utils/ApiError.js';
-import { generateOrderNumber } from '../utils/orderNumber.js';
+import { generateOrderNumber, withOrderNumberRetry } from '../utils/orderNumber.js';
 import * as stockService from './stock.service.js';
 
 const buildMeta = (page, limit, total) => ({
@@ -96,18 +96,21 @@ export const createSalesOrder = async (
   userId
 ) => {
   const { items, total } = await prepareOrderItems(rawItems);
-  const orderNumber = await generateOrderNumber(SalesOrder, 'orderNumber', 'SO');
 
-  const created = await SalesOrder.create({
-    orderNumber,
-    customerName,
-    customerPhone,
-    items,
-    total,
-    createdBy: userId,
+  return withOrderNumberRetry(async () => {
+    const orderNumber = await generateOrderNumber(SalesOrder, 'orderNumber', 'SO');
+
+    const created = await SalesOrder.create({
+      orderNumber,
+      customerName,
+      customerPhone,
+      items,
+      total,
+      createdBy: userId,
+    });
+
+    return getSalesOrderById(created._id);
   });
-
-  return getSalesOrderById(created._id);
 };
 
 /**

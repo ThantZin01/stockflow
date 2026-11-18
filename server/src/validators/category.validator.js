@@ -19,4 +19,3 @@ export const categoryBodySchema = z.object({
     .max(100, 'Category name must be at most 100 characters'),
   description: z.string().trim().max(500).optional().default(''),
 });
-

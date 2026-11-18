@@ -26,6 +26,7 @@ export const StockAdjustForm = ({ products = [], fixedProduct = null, onSuccess 
       queryClient.invalidateQueries({ queryKey: ['stock'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
       onSuccess?.();
     },
     onError: (err) => {

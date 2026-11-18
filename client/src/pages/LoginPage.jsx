@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 
 export const LoginPage = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const requested = location.state?.from?.pathname;
+  const from =
+    requested && requested.startsWith('/') && !requested.startsWith('//') ? requested : '/';
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
@@ -26,7 +30,7 @@ export const LoginPage = () => {
 
     try {
       await login(formData);
-      navigate('/', { replace: true });
+      navigate(from, { replace: true });
     } catch (error) {
       setErrorMessage(error.message || 'Login failed');
     } finally {

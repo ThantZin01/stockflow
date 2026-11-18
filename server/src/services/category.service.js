@@ -78,4 +78,3 @@ export const deleteCategory = async (id) => {
 
   return deleted;
 };
-

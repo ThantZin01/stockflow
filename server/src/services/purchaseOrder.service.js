@@ -3,7 +3,7 @@ import { Product } from '../models/Product.model.js';
 import { PurchaseOrder } from '../models/PurchaseOrder.model.js';
 import { Supplier } from '../models/Supplier.model.js';
 import { ApiError } from '../utils/ApiError.js';
-import { generateOrderNumber } from '../utils/orderNumber.js';
+import { generateOrderNumber, withOrderNumberRetry } from '../utils/orderNumber.js';
 import * as stockService from './stock.service.js';
 
 const buildMeta = (page, limit, total) => ({
@@ -89,17 +89,20 @@ export const getPurchaseOrderById = async (id) => {
 
 export const createPurchaseOrder = async ({ supplier, items: rawItems }, userId) => {
   const { items, total } = await prepareOrderData(supplier, rawItems);
-  const poNumber = await generateOrderNumber(PurchaseOrder, 'poNumber', 'PO');
 
-  const created = await PurchaseOrder.create({
-    poNumber,
-    supplier,
-    items,
-    total,
-    createdBy: userId,
+  return withOrderNumberRetry(async () => {
+    const poNumber = await generateOrderNumber(PurchaseOrder, 'poNumber', 'PO');
+
+    const created = await PurchaseOrder.create({
+      poNumber,
+      supplier,
+      items,
+      total,
+      createdBy: userId,
+    });
+
+    return getPurchaseOrderById(created._id);
   });
-
-  return getPurchaseOrderById(created._id);
 };
 
 export const updatePurchaseOrder = async (id, { supplier, items: rawItems }) => {

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Category } from '../models/Category.model.js';
 import { Product } from '../models/Product.model.js';
 import { StockMovement } from '../models/StockMovement.model.js';
@@ -121,8 +122,9 @@ export const createProduct = async (payload, userId) => {
     throw new ApiError(404, 'Selected supplier does not exist');
   }
 
-  // Create product with default quantity 0; initial stock is added exclusively via `stock.service.js`.
-  const created = await Product.create({
+  // Quantity stays 0 on insert. Opening stock goes through stock.service so the
+  // movement is written in the same transaction as the increment.
+  const productFields = {
     sku: sku.toUpperCase(),
     name,
     description,
@@ -131,19 +133,36 @@ export const createProduct = async (payload, userId) => {
     costPrice,
     salePrice,
     reorderLevel,
-  });
+  };
+
+  let createdId;
 
   if (initialQuantity > 0) {
-    await stockService.increaseStock({
-      productId: created._id,
-      quantity: initialQuantity,
-      reason: 'Initial stock on product creation',
-      refType: 'MANUAL',
-      userId,
-    });
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const [created] = await Product.create([productFields], { session });
+        createdId = created._id;
+        await stockService.increaseStock(
+          {
+            productId: created._id,
+            quantity: initialQuantity,
+            reason: 'Initial stock on product creation',
+            refType: 'MANUAL',
+            userId,
+          },
+          session
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+  } else {
+    const created = await Product.create(productFields);
+    createdId = created._id;
   }
 
-  return Product.findById(created._id)
+  return Product.findById(createdId)
     .populate('category', 'name')
     .populate('supplier', 'name')
     .lean();
@@ -207,4 +226,3 @@ export const toggleArchiveProduct = async (id, isArchived) => {
     .populate('supplier', 'name')
     .lean();
 };
-

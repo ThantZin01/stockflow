@@ -25,4 +25,3 @@ export const supplierBodySchema = z.object({
   phone: z.string().trim().max(40).optional().default(''),
   address: z.string().trim().max(300).optional().default(''),
 });
-

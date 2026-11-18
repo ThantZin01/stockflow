@@ -77,4 +77,3 @@ export const updateProductSchema = z.object({
 export const archiveProductSchema = z.object({
   isArchived: z.boolean().optional(),
 });
-

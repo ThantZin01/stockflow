@@ -21,4 +21,3 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   const deleted = await categoryService.deleteCategory(req.params.id);
   return sendSuccess(res, deleted, 200);
 });
-

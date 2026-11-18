@@ -75,4 +75,3 @@ productSchema.index({ name: 'text' });
 productSchema.index({ category: 1 });
 
 export const Product = mongoose.model('Product', productSchema);
-
