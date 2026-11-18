@@ -1,13 +1,13 @@
 # StockFlow — Inventory & Order Management System
 
-A full-stack MERN inventory and order management platform designed for small businesses. Staff and administrators manage products, categories, suppliers, stock adjustments, purchase orders, and customer sales orders while monitoring real-time KPIs and reports.
+A full-stack MERN inventory and order management platform built with strict service layering, atomic stock control, and multi-document MongoDB transactions. Designed for small businesses to manage products, suppliers, stock movements, purchase orders, customer sales orders, and financial/inventory reports (formatted in **MMK**).
 
 ---
 
 ## Live Deployment & Demo Accounts
 
 - **API Health Check:** `https://stockflow-api-one.vercel.app/api/v1/health`
-- **Frontend App:** `https://stockflow-sigma-liard.vercel.app/`
+- **Frontend App:** `https://<your-frontend-project>.vercel.app` *(update with your Vercel client URL)*
 
 After running `npm --prefix server run seed`, you can sign in with:
 
@@ -16,7 +16,7 @@ After running `npm --prefix server run seed`, you can sign in with:
 | **Admin** | `admin@stockflow.dev` | `Admin123!` |
 | **Staff** | `staff@stockflow.dev` | `Staff123!` |
 
-*(Or register a new account at `/register` — the first registered user automatically becomes `admin`.)*
+*(Or register a new account at `/register` — the first registered user automatically becomes `admin`. The Login page also provides one-click **Fill Admin** / **Fill Staff** demo buttons.)*
 
 ---
 
@@ -31,12 +31,12 @@ After running `npm --prefix server run seed`, you can sign in with:
 
 ## Key Features
 
-- **Role-Based Authentication (`admin` / `staff`):** JWT authentication with `bcryptjs` password hashing. Admins manage user roles, account activation, and category/supplier deletion; staff handle daily catalog, stock, order, and reporting workflows.
+- **Role-Based Authentication (`admin` / `staff`):** JWT authentication with `bcryptjs` password hashing. Admins manage user roles, account activation, and category/supplier deletion; staff handle catalog, stock, order, and reporting workflows.
 - **Catalog Management:** Categories, Suppliers (with supplied-products detail), and Products with unique uppercase SKUs, search, category and low-stock filters, sorting, pagination, and soft-delete archiving.
 - **Stock & Audit Trail:** Centralized stock mutations through `stock.service.js`, low-stock monitoring (`quantity <= reorderLevel`), manual adjustments with required reasons, and a filterable `StockMovement` history (`IN`, `OUT`, `ADJUSTMENT`).
-- **Purchase Orders (`draft → ordered → received`):** Auto-numbered (`PO-YYYY-0001`), editable while `draft`, and transactional receiving that atomically updates product stock and records `IN` movements.
+- **Purchase Orders (`draft → ordered → received`):** Auto-numbered (`PO-YYYY-0001`), editable while `draft`, and transactional receiving that atomically increases product stock and records `IN` movements.
 - **Sales Orders (`pending → confirmed → completed` / `cancelled`):** Auto-numbered (`SO-YYYY-0001`), server-computed totals with immutable price snapshots, transactional confirmation (atomic stock check + deduction, `409 Conflict` on insufficient stock), and transactional cancellation (restores stock if `confirmed`).
-- **Dashboard & Reports:** Summary KPIs, 30-day sales trend chart (Recharts), top-selling products, and inventory cost/retail valuation by category via MongoDB aggregation pipelines. The web UI formats all monetary values in **MMK** (whole kyat).
+- **Dashboard & Reports:** Summary KPIs, 30-day sales trend chart (Recharts), top-selling products, and inventory cost/retail valuation by category via MongoDB aggregation pipelines.
 - **Production Hardening:** `helmet`, `cors`, `express-rate-limit` (with `trust proxy` enabled), Zod request validation, central error handling, and Jest + Supertest integration tests.
 
 ---
@@ -52,7 +52,7 @@ After running `npm --prefix server run seed`, you can sign in with:
 
 ---
 
-## Architecture
+## Architecture & Call Flow
 
 ### Project Structure
 
@@ -64,9 +64,10 @@ StockFlow/
 │       ├── api/                # Axios instance + per-module API clients
 │       ├── components/         # Reusable UI (Modals, Tables, Pagination, Charts, StatCard)
 │       ├── context/            # AuthContext
-│       ├── hooks/              # useAuth
+│       ├── hooks/              # useAuth, useDebouncedValue
 │       ├── pages/              # Route-level screens
-│       └── routes/             # ProtectedRoute, RoleRoute
+│       ├── routes/             # ProtectedRoute, RoleRoute
+│       └── utils/              # MMK currency formatting
 ├── server/
 │   ├── api/index.js            # Vercel serverless entry point
 │   ├── vercel.json             # Serverless routing config
@@ -88,13 +89,34 @@ StockFlow/
 └── README.md
 ```
 
-### Request Layering
+### Layering & Function Call Flow
+
+Every backend endpoint follows a strict unidirectional architecture:
 
 ```text
-route → middleware (auth, validate, rateLimiter) → controller → service → model
+route → middleware (rateLimiter, authenticate, authorize, validate) → controller → service → model
 ```
 
 - **Strict Stock Ownership:** `server/src/services/stock.service.js` is the **only** module permitted to modify `Product.quantity`, guaranteeing every change produces an immutable `StockMovement` record.
+
+#### Example Call Flow: Confirming a Sales Order (`PATCH /api/v1/sales-orders/:id/confirm`)
+
+```text
+Client (SalesOrdersPage.jsx)
+  └─ confirmSalesOrder(id) [client/src/api/salesOrders.api.js]
+       └─ PATCH /api/v1/sales-orders/:id/confirm
+            ├─ rateLimiter (apiLimiter)
+            ├─ authenticate (JWT verify → req.user)
+            ├─ validate({ params: salesOrderIdParamSchema })
+            └─ salesOrderController.confirmSalesOrder [asyncHandler]
+                 └─ salesOrderService.confirmSalesOrder(id, userId)
+                      └─ mongoose.startSession() → session.withTransaction()
+                           ├─ SalesOrder.findOneAndUpdate({ _id, status: 'pending' }, { status: 'confirmed' })
+                           └─ for each item: stockService.decreaseStock(..., session)
+                                ├─ Product.findOneAndUpdate({ _id, quantity: { $gte: qty } }, { $inc: { quantity: -qty } })
+                                │    └─ if null → throw ApiError(409, 'Insufficient stock') → transaction rolls back
+                                └─ stockService.createMovement({ type: 'OUT', refType: 'SALES_ORDER', ... }, session)
+```
 
 ---
 
@@ -118,6 +140,39 @@ route → middleware (auth, validate, rateLimiter) → controller → service �
 ### Stock Consistency (Atomic Updates & Transactions)
 - **Conditional atomic updates:** `decreaseStock` executes `Product.findOneAndUpdate({ _id, quantity: { $gte: qty } }, { $inc: { quantity: -qty } })`. If `null` is returned, the request fails with `409 Conflict`, preventing negative inventory under concurrent requests.
 - **Multi-document transactions:** `receivePurchaseOrder`, `confirmSalesOrder`, and `cancelSalesOrder` run inside `mongoose.startSession()` + `session.withTransaction(...)` so multi-item stock updates and order status transitions succeed or roll back together.
+
+---
+
+## Engineering Challenges & Solutions
+
+Real issues encountered during development and deployment, and how they were resolved:
+
+1. **Express 5 Read-Only `req.query` Getter:**
+   Express 5 defines `req.query` as a getter on `IncomingMessage`, so assigning `req.query = result.data` directly in Zod validation middleware throws a `TypeError`. Resolved in [validate.js](file:///d:/Projects/StockFlow/server/src/middleware/validate.js) by overriding the property descriptor on the request instance via `Object.defineProperty(req, 'query', { value: result.data, writable: true, enumerable: true, configurable: true })`.
+2. **Concurrent & Partial Order Stock Corruption:**
+   A naive read-then-write check allows race conditions or leaves partial deductions when the second item in an order lacks stock. Resolved by centralizing all `Product.quantity` writes in [stock.service.js](file:///d:/Projects/StockFlow/server/src/services/stock.service.js) with `$gte` atomic filters and wrapping multi-item order state transitions in MongoDB transactions.
+3. **Serverless Deployment on Vercel (DNS, Connection Caching & Proxy IPs):**
+   - Local ISPs sometimes block `mongodb+srv` SRV DNS lookups, whereas Vercel's Lambda runtime requires native DNS. [db.js](file:///d:/Projects/StockFlow/server/src/config/db.js) applies `dns.setServers(['8.8.8.8', '1.1.1.1'])` only in local development (`!process.env.VERCEL`) and caches the Mongoose connection promise across warm serverless invocations.
+   - [server/api/index.js](file:///d:/Projects/StockFlow/server/api/index.js) wraps initialization and `connectDB()` in `try/catch` so startup or credential issues return structured JSON errors instead of opaque `500 FUNCTION_INVOCATION_FAILED` responses.
+   - [app.js](file:///d:/Projects/StockFlow/server/src/app.js) enables `app.set('trust proxy', 1)` so `express-rate-limit` reads client IPs accurately behind Vercel's reverse proxy, and [client/vercel.json](file:///d:/Projects/StockFlow/client/vercel.json) rewrites SPA routes to `index.html`.
+4. **React 19 `eslint-plugin-react-hooks` Strictness:**
+   Resetting modal form state inside `useEffect` triggered `react-hooks/set-state-in-effect`. Resolved by initializing state from props and keying modal instances on open/record ID.
+
+---
+
+## Testing & Quality Assurance
+
+### Automated Integration Tests (`server/tests/api.test.js`)
+Built with **Jest** (ESM via `--experimental-vm-modules`) and **Supertest** running against the Express app and MongoDB:
+- **Auth workflow:** User registration, password hash exclusion (`passwordHash === undefined`), JWT login, and `/auth/me` verification.
+- **Catalog integrity:** Creating a product with a duplicate SKU returns `409 Conflict`.
+- **Sales order rollback:** Confirming a sales order exceeding available stock returns `409 Conflict` and leaves `Product.quantity` unchanged.
+- **Purchase order idempotency:** Receiving an ordered PO increments stock (`+10`) and transitions status to `received`; attempting a second receive returns `409 Conflict`.
+
+### Static & Build Checks
+- **ESLint:** Enforced across both `server/src` and `client/src` (0 errors, 0 warnings).
+- **Prettier:** Consistent code formatting across backend and frontend.
+- **Production Build:** `vite build` verifies bundling of all client routes, components, and Recharts visualizations.
 
 ---
 
@@ -159,30 +214,17 @@ JWT_SECRET=replace_with_a_strong_secret
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 NODE_ENV=development
-APP_TIMEZONE=UTC
 ```
-
-`APP_TIMEZONE` is an IANA name (`Asia/Bangkok`, `America/New_York`). Dashboard "today", monthly revenue, and sales-by-day buckets use it. The default `UTC` matches a server that has not set one.
 
 Create `client/.env`:
 ```env
 VITE_API_URL=http://localhost:5000/api/v1
 ```
 
-### 3. Seed data for testing
-
-**Option A — your account stays, catalog/orders only (recommended after you register):**
-```bash
-npm --prefix server run seed:mock
-```
-Requires at least one user in the database (register via the app, or use Option B once).
-
-**Option B — full reset with demo logins (`admin@stockflow.dev` / `Admin123!`, `staff@stockflow.dev` / `Staff123!`):**
+### 3. Seed Demo Data
 ```bash
 npm --prefix server run seed
 ```
-
-Mock data includes 5 categories, 3 Myanmar suppliers, 31 products (MMK prices), low-stock and archived samples, purchase orders in every status, and sales orders for confirm / complete / cancel flows.
 
 ### 4. Run Locally
 ```bash
@@ -195,6 +237,7 @@ npm --prefix client run dev
 npm --prefix server test
 npm --prefix server run lint
 npm --prefix client run lint
+npm --prefix client run build
 ```
 
 ---
@@ -202,7 +245,7 @@ npm --prefix client run lint
 ## Deployment (MongoDB Atlas + Vercel)
 
 1. **MongoDB Atlas:** Create an M0 cluster (supports replica-set transactions), add a database user, and whitelist `0.0.0.0/0` in **Network Access**.
-2. **Backend (Vercel):** Import the repository with Root Directory `server` and Framework Preset `Other`. Set `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV=production`, `CLIENT_URL`, and `APP_TIMEZONE` (for example `Asia/Bangkok`).
+2. **Backend (Vercel):** Import the repository with Root Directory `server` and Framework Preset `Other`. Set `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `NODE_ENV=production`, and `CLIENT_URL`.
 3. **Frontend (Vercel):** Import the repository with Root Directory `client` and Framework Preset `Vite`. Set `VITE_API_URL=https://<your-backend>.vercel.app/api/v1`.
 4. **CORS Sync:** Update `CLIENT_URL` on the backend Vercel project to your live frontend URL and redeploy.
 
